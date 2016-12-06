@@ -1,0 +1,1 @@
+<Token xmlns:xlink="http://www.w3.org/1999/xlink">システム センター 2012 R2 の Virtual Machine Manager</Token>

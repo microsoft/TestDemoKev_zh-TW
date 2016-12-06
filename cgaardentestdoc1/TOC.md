@@ -1,1 +1,1 @@
-# <a name="indexindexmd"></a>[Index](index.md)
+# <a name="indexindexmd"></a>[インデックス](index.md)
