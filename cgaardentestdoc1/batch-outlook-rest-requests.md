@@ -1,43 +1,43 @@
-MS. TocTitle : Les demandes de lot Outlook RESTE (aperçu) titre : RESTE de Outlook envoyer des demandes de lots (aperçu) Description : comment lot RESTE plusieurs demandes ensemble pour former une requête HTTP unique et réduire la charge des connexions multiples à HTTP. MS. ContentId : a842854e-46b3-47d9-8899-c27b481f4e78 <<<<<<< ms.topic de TÊTE : ms.date de référence (API) : 16 mai 2016, =======
-ms.date : 13 septembre 2016
->>>>>>> la zone de transit
+ms です。TocTitle: Outlook 残りのバッチ要求 (プレビュー) タイトル: バッチの説明の (プレビュー) で Outlook の他の送信を要求: 残りの部分を複数のバッチを処理する方法を 1 つの HTTP 要求を形成し、複数の HTTP 接続のオーバーヘッドを軽減する同時要求します。ms です。ContentId: a842854e-46b3-47d9-8899-c27b481f4e78 <<<<<<< ヘッド ms.topic: 参照 (API) ms.date: 2016 5 月 16 日=======
+ms.date: 2016 年 9 月 13 日
+>>>>>>> ステージング
 
 [!INCLUDE [Add the O365API repo styles](../includes/controls/addo365apistyles.html)]
 
-# <a name="send-outlook-rest-requests-in-batches-preview"></a>Envoyer les demandes Outlook RESTE par lots (aperçu)
+# <a name="send-outlook-rest-requests-in-batches-preview"></a>バッチ (プレビュー) で Outlook の他の要求を送信します。
 
 [!INCLUDE [Add the Outlook REST API filters--beta default v1 v2 disabled](../includes/controls/addOutlookversion_betadefault_v1v2disabled.html)]    
 
 
- _**S’applique à :** Exchange Online | Office 365 | Hotmail.com | Live.com | MSN.com | Outlook.com | Passport.com_
+ _**に適用されます:**オンライン交換 |Office 365 |Hotmail.com |Live.com |MSN.com |Outlook.com |Passport.com_
 
-<p class="previewnote">Cette documentation traite l’envoi de plusieurs demandes d’Outlook RESTE sous la forme d’une requête de lot unique qui est actuellement en mode Aperçu. Aperçu des fonctionnalités peuvent être modifiées avant la finalisation et peuvent endommager le code qui les utilise. De ce fait, en général vous devez utiliser une version de production d’une API dans votre code de production. Le cas échéant, v2.0 est actuellement la version par défaut.</p>
+<p class="previewnote">このドキュメントでは、プレビューである 1 つのバッチ要求として Outlook の他の複数の要求を送信することについて説明します。プレビュー機能では、ファイナライズする前に変更されることし、それらを使用するコードを中断することがあります。このため、一般的にする必要がありますを使用する API の生産バージョンのみ、実稼働コードで。可能な場合、バージョン 2.0 は現在推奨されるバージョンです。</p>
 
-Le traitement par lots vous permet de placer plusieurs demandes Outlook RESTE dans une seule demande de traitement par lots HTTP, réduisant le nombre de connexions HTTP et les frais généraux. Les demandes dans un lot d’accéder aux données de l’utilisateur connecté, sécurisé par Azure Active Directory dans Office 365, ou dans un compte Microsoft (Hotmail.com, Live.com, MSN.com, Outlook.com ou Passport.com). 
+バッチ処理を使用すると、HTTP 接続とオーバーヘッドの数を減らすこと、1 つの HTTP のバッチ要求で複数の Outlook の他の要求を配置します。バッチ内の要求は、サインインしているユーザーのまたは (、Live.com、MSN.com、Outlook.com、または Passport.com) は、Microsoft アカウントに、Office 365 では、Azure Active Directory によってセキュリティで保護されたデータにアクセスします。 
 
 
-**Remarque** Pour plus de simplicité de référence, le reste de cet article utilise **« Outlook.com » pour inclure ces domaines de compte Microsoft**. 
+**メモ**参照のわかりやすくするため、この資料の残りの部分は、**これらの Microsoft アカウントのドメインを含めるには、「Outlook.com」**を使用します。 
 
-## <a name="overview"></a>Vue d’ensemble
+## <a name="overview"></a>概要
 
-Une demande RESTE requiert une connexion HTTP entre le client et le serveur, ce qui entraîne une certaine surcharge. Le traitement par lots vous permet de réduire les frais de connexion en associant plusieurs appels de l’API REST dans une requête HTTP POST au point de terminaison $batch :  
+残りの要求には、クライアントとサーバーは、一定量のオーバーヘッドが発生するとの間の HTTP 接続が必要です。バッチ処理では、$batch エンドポイントを 1 つの HTTP POST 要求に複数の REST API 呼び出しを組み合わせることにより、接続のオーバーヘッドを削減できます。  
 ```
 POST https://outlook.office.com/api/{version}/$batch
 ```
-Une demande de traitement par lots peut inclure jusqu'à 20 appels API REST individuelles, qui peuvent être des requêtes de données (par exemple, GET) ou modifier (par exemple POST) opérations. Vous pouvez spécifier un en-tête [Prefer](#PreferContinueOnError) pour que le traitement par lots à continuer même lors de l’échouent d’un ou plusieurs appels de RESTE.
+バッチ要求は、最大 20 個別 REST API コール、データのクエリをすることができますを含めることができます (GET など) を変更するか (例: POST) 操作です。バッチの残りの部分の 1 つまたは複数の呼び出しが失敗する場合でもを続行する[選択](#PreferContinueOnError)ヘッダーを指定することができます。
 
-Le traitement par lots est particulièrement utile lors de la synchronisation de grandes quantités de données. Appels d’API dans le même lot peuvent accéder aux différentes ressources, telles que les messages et les événements, qui appartiennent à la même boîte aux lettres de l’utilisateur connecté. 
+バッチ処理は、大量のデータを同期中に特に便利ですが。同じバッチ内の API 呼び出しは、メッセージやイベントは、同じサインイン中のユーザーのメールボックスに属しているなど、さまざまなリソースにアクセスできます。 
 
-Si vous avez besoin de plus de 20 appels, ou si l’ordre de lancement d’appels est important, utilisez plusieurs requêtes de lots.
+20 件以上の呼び出しを行う必要がある場合、または呼び出しを完了する順序が重要な場合は、複数のバッチ要求を使用します。
 
 
-## <a name="example"></a>Exemple
+## <a name="example"></a>例
 
-Un exemple simple de meilleur illustre le traitement par lots. La requête de lots suivant place 2 appels de l’API REST de Outlook dans un seul lot :
-1. OBTENIR tous les événements de l’utilisateur connecté
-2. ENVOYER un message.
+最も簡単な例では、バッチ処理を示しています。次のバッチ要求では、1 つのバッチで 2 つの Outlook の他の API 呼び出しを配置します。
+1. サインイン中のユーザーのすべてのイベントを取得します。
+2. メッセージを投稿します。
 
-### <a name="batch-request"></a>Demande de traitement par lots
+### <a name="batch-request"></a>バッチ要求
 
 ```
 POST https://outlook.office.com/api/beta/$batch HTTP/1.1
@@ -82,9 +82,9 @@ Content-Type: application/json
 --batch_myBatchId--
 ```
 
-### <a name="batch-response"></a>Réponse par lot
+### <a name="batch-response"></a>バッチ応答
 
-La réponse par lot inclut des codes de réponse distincts et des organismes, le cas échéant, pour la requête de lots et appels individuels. 
+バッチ応答には、該当する場合、バッチ要求および個々 のコールの個別の応答コードと本文が含まれています。 
 
 ```
 HTTP/1.1 200 OK
@@ -140,80 +140,80 @@ HTTP/1.1 202 Accepted
 
 ****
 
-## <a name="batch-details"></a>Détails de lot
+## <a name="batch-details"></a>バッチの詳細
 
-### <a name="endpoint-url"></a>URL du point de terminaison
+### <a name="endpoint-url"></a>エンドポイントの URL
 
-Pour envoyer un lot de plusieurs demandes d’Outlook RESTE, effectuez une PUBLICATION sur le point de terminaison $batch :
+Outlook の他の複数の要求のバッチを送信するには、投稿 $batch エンドポイントでの操作を行います。
 ```
 POST https://outlook.office.com/api/{version}/$batch HTTP/1.1
 ```
 
-**Attention**  Lorsque vous utilisez la https://outlook.office.com URL racine, pour des performances optimales, ajouter un en-tête **x-AnchorMailbox** et lui affecter une adresse de messagerie de l’utilisateur. En outre, gérer le cas où la boîte aux lettres de l’utilisateur d’un Outlook.com n'a pas encore été activée pour l’API REST de Outlook - vérifier les codes d’erreur MailboxNotEnabledForRESTAPI et MailboxNotSupportedForRESTAPI. En savoir plus [ici](..\api\use-outlook-rest-api.md#OutlookRESTCaution). 
+**注意** ルート URL https://outlook.office.com を使用して、最適なパフォーマンスと**x AnchorMailbox**ヘッダーを追加ユーザーの電子メール アドレス] に設定します。また、大文字と小文字、Outlook.com のユーザーのメールボックスがまだ有効になっていない Outlook の REST API のエラー コード MailboxNotEnabledForRESTAPI と MailboxNotSupportedForRESTAPI のチェックを処理します。詳細についてを参照してください[ここで](..\api\use-outlook-rest-api.md#OutlookRESTCaution)。 
 
-**Notes pour les développeurs en Chine** 
+**中国の開発者用のメモ** 
 
-- Si vous développez des applications _pour Office 365_ en Chine, vous devez continuer à utiliser les [points de terminaison API d’Office 365 pour la Chine](..\api\o365-china-endpoints.md).
+- アプリケーションを開発する場合は_Office 365 の_中国で、[中国向けの Office 365 の API のエンドポイント](..\api\o365-china-endpoints.md)を使用する続行する必要があります。
 
-- Si vous créez des applications _pour Outlook.com_ en Chine, vous devez utiliser l' [Aperçu de modèle v2 app](..\api\use-outlook-rest-api.md#RegAuthConverged)et le point de terminaison Outlook RESTE suivant :`https://outlook.office.com/api/{version}`
+- アプリケーションを作成する場合は_Outlook.com の_中国では、 [v2 アプリケーション モデルのプレビュー](..\api\use-outlook-rest-api.md#RegAuthConverged)、および次の Outlook の REST エンドポイントを使用する必要があります。`https://outlook.office.com/api/{version}`
 
 
-###<a name="version-of-api"></a>Version de l’API
+###<a name="version-of-api"></a>API のバージョン
 
-Le traitement par lots en cours d’aperçu et est uniquement disponible dans l’espace de noms bêta, vous devez spécifier `{version}` en tant que `beta`:
+バッチ処理プレビュー状態では、現在ベータ版の名前空間でのみ使用可能なこれを指定`{version}`と`beta`。
 
 `https://outlook.office.com/api/beta/$batch`
 
-Dans la mesure où une demande de traitement par lots et les AUTRES appels dans le traitement par lots doit utiliser le même hôte et la même version de l’API, vous pouvez de lot actuellement que des appels Outlook RESTE exposées dans la version bêta. 
+バッチ要求とその他の呼び出しあるため、バッチには、ホストと API のバージョンを使用する必要があります、現在ベータ版で公開されている Outlook の他の呼び出しだけをバッチ処理することができます。 
 
-**Attention** Notez que certains appels API que vous pouvez inclure dans un lot de répondent différemment dans la version bêta que dans les versions pour une disponibilité générale, telles que la version 2.0 et la version 1.0. En général, si vous décidez d’utiliser des appels API dans l’état de l’aperçu dans la version bêta, planifier sur la vérification des fonctionnalités dans votre application et la prise en compte des modifications avec rupture possibles.
+**注意**バッチに含めることがいくつかの API 呼び出し応答よりも全般的な可用性を実現するなど、バージョン 2.0 と v1.0 のバージョンのベータ版で異なることを注意してをください。一般に、ベータ版のプレビューの状態で、API 関数を使用する場合は、アプリの機能を確認して、変更可能な点への対応を計画します。
  
 
-###<a name="target-user"></a>Utilisateur cible
+###<a name="target-user"></a>ターゲット ユーザー
 
-Vous pouvez regrouper les appels API REST de Outlook pour la même boîte aux lettres de l’utilisateur connecté dans un lot. La boîte aux lettres peut être sur Office 365 ou Outlook.com.
+同じバッチ内でサインインしているユーザーのメールボックスに対して Outlook の他の API 呼び出しをグループ化することができます。メールボックスを Office 365 または Outlook.com にあってもかまいません。
 
-### <a name="authentication"></a>Authentification
+### <a name="authentication"></a>認証
 
-Similaire à l’envoi d’appels de [l’API REST de Outlook](..\api\use-outlook-rest-api.md#DefineOutlookRESTAPI) comme des requêtes individuelles, vous devez inclure un jeton d’accès valide dans un en-tête de demande **d’autorisation** . Si vous spécifiez cet en-tête pour la requête de lots, le jeton d’accès doit fournir l’autorisation nécessaire pour tous les appels dans ce lot. Vous pouvez éventuellement spécifier un jeton d’accès pour un appel spécifique dans le lot si cet appel requiert un jeton d’accès différents.
+個々 の要求として[Outlook の他の API](..\api\use-outlook-rest-api.md#DefineOutlookRESTAPI)呼び出しを送信することと同様に、有効なアクセス トークンは、**認証**要求のヘッダーに含める必要があります。バッチ要求のヘッダーを指定する場合は、アクセス トークンがそのバッチ内のすべての呼び出しに必要なアクセス許可を提供します。必要に応じてその呼び出しが別のアクセス トークンを必要とする場合、バッチ内、特定の呼び出し用のアクセス トークンを指定できます。
  
-L’obtention d’un jeton d’accès nécessite que vous avez enregistré identifié votre application et obtenu l’autorisation appropriée. [En savoir plus](..\api\use-outlook-rest-api.md#ShortRegAuthWorkflow) sur certains rationalisée des options d’enregistrement et d’autorisation pour vous. Gardez à l’esprit que vous plus d’informations sur le traitement par lots des demandes.
+アクセス トークンを取得するには、登録されていると、アプリケーションを識別し、適切な承認を取得する必要があります。いくつかについての[詳細について](..\api\use-outlook-rest-api.md#ShortRegAuthWorkflow)は、登録および承認オプションが合理化されました。要求をバッチ処理の詳細の学習には、この点に留意してください。
 
-### <a name="batch-request-headers"></a>En-têtes de demande de traitement par lots
+### <a name="batch-request-headers"></a>バッチ要求のヘッダー
 
-Inclure les en-têtes suivants pour chaque demande de traitement par lots :
+バッチ要求ごとに次のヘッダーが含まれます。
 
 ```
 Host: outlook.office.com
 Content-Type: multipart/mixed; boundary=batch_<batchId> 
 ```
 
-où `{batchId}` identifie un lot et est utilisé pour délimiter les demandes dans le lot. Il peut être un GUID ou n’importe quelle chaîne distinctif.
+場所`{batchId}`バッチを識別し、バッチ内で要求を区切るために使用されます。GUID または任意の識別用文字列を指定できます。
 
-Vous pouvez inclure les autres en-têtes le cas échéant. À l’exception des en-têtes liés au contenu comme **Type de contenu**, les en-têtes de la requête de lots s’appliquent généralement à chaque opération dans le lot. Si vous spécifiez un en-tête dans la demande de traitement par lots et une opération spécifique dans le lot, ce dernier est prioritaire et s’applique à cette opération.   
+適切な場所は、他のヘッダーを含めることができます。以外のコンテンツに関連する**コンテンツの種類**などのヘッダー、バッチ要求のヘッダーは、一般に、バッチ内のすべての操作に適用されます。バッチ要求と、バッチ内の特定の操作の両方のヘッダーを指定する場合、後者が優先され、操作に適用されます。   
 
 
-### <a name="batch-request-body"></a>Corps de demande de traitement par lots
+### <a name="batch-request-body"></a>バッチ要求の本体
 
-Démarrez chaque opération au sein d’un lot avec les lignes suivantes :
+次の行を含むバッチ内の各操作を開始します。
 ```
 --batch_{batchId} 
 Content-Type: application/http 
 Content-Transfer-Encoding: binary 
 ```
-Fin de la dernière opération du lot à cela :
+このバッチ内の最後の操作を終了します。
 ```
 --batch_{batchId}--
 ```
 
 
-### <a name="operations-in-a-batch"></a>Opérations d’un lot
-Vous pouvez spécifier jusqu'à 20 opérations dans une requête de lots.
+### <a name="operations-in-a-batch"></a>バッチ内での操作
+バッチ要求では、最大 20 個の操作を指定できます。
 
-Une opération d’un lot peut être une requête de données, une modification, une action ou une demande d’appel de fonction. Alors que vous n’êtes pas obligé de répéter URL complètes et l’état de tous les en-têtes pour chaque opération dans le lot, veillez à inclure des en-têtes spécifiques et de corps de requête s’ils sont requis pour une opération.
+バッチ内の操作は、データのクエリ、変更、アクション、または関数の呼び出し要求できます。完全な Url と状態すべてのヘッダーをバッチ内の各操作を繰り返す必要はありません、中には、特定のヘッダーを含めるし、操作に必要な場合は、本文を要求してください。
 
-### <a name="relative-urls-within-a-batch"></a>URL relatives au sein d’un lot
-Comme alternative à la spécification d’une URL complète pour une opération, vous pouvez inclure une URL relative. Par exemple, la requête GET dans l’exemple ci-dessous spécifie une URL `/api/beta/me/events` par rapport à l’hôte spécifié dans la requête de lots, `https://outlook.office.com`.
+### <a name="relative-urls-within-a-batch"></a>バッチ内での相対 Url
+操作の完全な URL を指定する代わりに、相対 URL を含めることができます。次の例では GET 要求で URL を指定するたとえば、 `/api/beta/me/events` 、バッチ要求で指定されたホストからの相対`https://outlook.office.com`。
 
 ```
 POST https://outlook.office.com/api/beta/$batch HTTP/1.1
@@ -233,14 +233,14 @@ GET  /api/beta/me/events?$select=subject,organizer    HTTP/1.1
 
 ```
 
-### <a name="processing-a-batch-request"></a>Traitement d’une demande de traitement par lots
-Une requête de lots est traitée comme une demande et renvoie son propre code de réponse. Une demande de lot correct avec en-têtes corrects renvoie HTTP 200 OK. Cela ne toutefois signifie que toutes les requêtes dans le lot ont réussi. Chaque requête dans le corps de la demande de traitement par lots est traitée à son tour séparément et renvoie son propre code de réponse et tout message d’erreur et les corps de réponse.
+### <a name="processing-a-batch-request"></a>バッチ要求の処理
+バッチ要求では、1 つの要求として独自に処理され、独自の応答コードを返します。正しいヘッダーを含む整形式のバッチ要求は HTTP 200 OK を返します。これは、ただしわけでは、バッチ内のすべての要求が成功しました。バッチ要求の本体では、各要求は別々 に処理される順と、独自の応答コードおよび応答の本文とエラー メッセージを返します。
 
-Le serveur peut exécuter des opérations au sein d’un lot dans n’importe quel ordre. Si vous devez avoir des opérations effectuées dans un ordre spécifique, vous ne devez pas les placer dans la même demande de traitement par lots. Au lieu de cela, envoyez une seule opération par lui-même, attendre la réponse avant l’envoi suivant.
+サーバーは、任意の順序で、バッチ内での操作を実行する可能性があります。特定の順序で実行される操作が必要な場合同じバッチ要求内に配置する必要がありますがないです。代わりに、単独で 1 回の操作を送信する、次のいずれかを送信する前に応答を待機します。
 
 <a name="PreferContinueOnError"></a>
 
-Par défaut, le traitement s’arrête à la première opération qui renvoie une erreur. Vous pouvez spécifier l’en-tête suivant pour ignorer l’erreur et poursuivre l’opération suivante dans le lot de traitement :
+既定では、処理エラーが返される最初の操作を停止しています。処理エラーを無視し、バッチ内の次の操作を続行して次のヘッダーを指定することができます。
 
 ```
 Prefer: odata.continue-on-error
@@ -249,43 +249,43 @@ Prefer: odata.continue-on-error
 
 
 <a name="NextSteps"> </a>
-## <a name="next-steps"></a>Étapes suivantes
+## <a name="next-steps"></a>次のステップ
 
-Si vous êtes prêt à commencer la conception d’une application ou que vous souhaitez simplement en savoir plus, nous avons tout prévu.
+アプリケーションの構築を開始、あるいは詳細については、準備が整ったら、かどうかお任せします。
 
-- [Mise en route avec la messagerie, de calendrier et de Contacts RESTE API](http://dev.outlook.com/RestGettingStarted).
+- [メール、カレンダー、および連絡先の他の Api を使用](http://dev.outlook.com/RestGettingStarted)します。
 
-- Explorez les API d’Office 365 à l’aide des [API Sandbox](https://apisandbox.msdn.microsoft.com/)interactive.
+- 対話型の[API のサンド ボックス](https://apisandbox.msdn.microsoft.com/)を使用して Office 365 の Api について説明します。
 
-- Choix des exemples ? [Nous avons](..\howto\starter-projects-and-code-samples.md).
+- サンプルをしますか。[きました](..\howto\starter-projects-and-code-samples.md)。
 
 
-Ou, pour en savoir plus sur l’utilisation de la plate-forme Office 365 :
+または、Office 365 のプラットフォームを使用する方法の詳細について説明します。
 
-- [Outlook API REST sur le centre de développement d’Outlook](http://dev.outlook.com/RestGettingStarted/Overview)
+- [REST API を outlook で Outlook のデベロッパー センター](http://dev.outlook.com/RestGettingStarted/Overview)
 
-- [Vue d’ensemble du développement sur la plate-forme Office 365](..\howto\platform-development-overview.md)
+- [Office 365 のプラットフォーム上での開発の概要](..\howto\platform-development-overview.md)
 
-- [Autorisation de l’authentification et les ressources d’application Office 365](..\howto\common-app-authentication-tasks.md)
+- [Office 365 アプリケーションの認証およびリソースの承認](..\howto\common-app-authentication-tasks.md)
 
-- [Enregistrer manuellement votre application avec AD Azure afin qu’il puisse accéder à Office 365 API](..\howto\add-common-consent-manually.md)
+- [Azure AD で Office 365 の Api にアクセスできるように、アプリケーションを手動で登録します。](..\howto\add-common-consent-manually.md)
 
-- [Référence des API de messagerie RESTE](..\api\mail-rest-operations.md)
+- [メールの残りの部分の Api を参照します。](..\api\mail-rest-operations.md)
 
-- [Référence des API du RESTE de calendrier](..\api\calendar-rest-operations.md)
+- [REST Api の予定表を参照します。](..\api\calendar-rest-operations.md)
 
-- [Référence des API du RESTE des contacts](..\api\contacts-rest-operations.md)
+- [REST Api リファレンスを取引先担当者します。](..\api\contacts-rest-operations.md)
 
-- [API REST de tâche (aperçu)](..\api\task-rest-operations.md) 
+- [タスクの残りの部分の API (プレビュー)](..\api\task-rest-operations.md) 
 
-- [Référence à une ressource pour la tâche RESTE API, calendrier, des Contacts et messagerie](..\api\complex-types-for-mail-contacts-calendar.md)
+- [メール、予定表、連絡先、およびタスクの残りの部分の Api のリソースの参照](..\api\complex-types-for-mail-contacts-calendar.md)
 
-- [Référence des API de données Extensions RESTE de Office 365](..\api\extensions-rest-operations.md)
+- [Office 365 のデータ拡張機能の残りの部分の API リファレンス](..\api\extensions-rest-operations.md)
 
-- [Référence de l’API d’AUTRES personnes](..\api\people-rest-operations.md)
+- [人の残りの部分の API リファレンス](..\api\people-rest-operations.md)
 
-- [Référence des API REST de notifications](..\api\notify-rest-operations.md)
+- [通知の残りの部分の API リファレンス](..\api\notify-rest-operations.md)
 
-- [Référence API REST de Photo de l’utilisateur](..\api\photo-rest-operations.md)
+- [ユーザーの写真の残りの部分の API リファレンス](..\api\photo-rest-operations.md)
 
 [!INCLUDE [Enable filtering functionality ](../includes/controls/enablefiltering.html)]
