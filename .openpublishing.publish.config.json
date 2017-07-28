@@ -8,18 +8,20 @@
       "build_source_folder": "TestDemoKevDoc1",
       "build_output_subfolder": "TestDemoKevDoc1",
       "locale": "zh-TW",
-      "version": 0,
       "open_to_public_contributors": true,
       "type_mapping": {
         "Conceptual": "Content",
         "ManagedReference": "Content",
         "RestApi": "Content"
       },
-      "build_entry_point": "op"
+      "build_entry_point": "op",
+      "version": 0
     }
   ],
   "notification_subscribers": [],
   "branches_to_filter": [],
+  "continue_with_document_error": true,
   "skip_source_output_uploading": false,
-  "dependent_repositories": []
+  "dependent_repositories": [],
+  "need_generate_pdf_url_template": false
 }
